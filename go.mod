@@ -4,12 +4,12 @@ go 1.20
 
 require (
 	github.com/hasura/go-graphql-client v0.10.2
+	github.com/hgiasac/graphql-utils v0.0.0-20240107180021-6afee0b34872
 	github.com/hgiasac/hasura-router v0.0.0-20230306044702-ec758eb85f6a
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/hgiasac/graphql-utils v0.0.0-20240107180021-6afee0b34872 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

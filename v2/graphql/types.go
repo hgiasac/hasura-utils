@@ -6,3 +6,8 @@ type UpdateManyInput struct {
 	Set   map[string]any `json:"_set,omitempty"`
 	Inc   map[string]any `json:"_inc,omitempty"`
 }
+
+// AffectedRowsOutput represent affected rows response
+type AffectedRowsOutput struct {
+	AffectedRows int `graphql:"affected_rows" json:"affected_rows"`
+}
