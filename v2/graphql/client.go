@@ -82,11 +82,6 @@ type HasuraClient struct {
 	sessionVariables access.SessionVariables
 }
 
-// NewAdminClient creates a new Hasura GraphQL client with admin role
-func NewAdminClient(endpoint string, adminSecret string, options ...Option) *HasuraClient {
-	return NewHasuraClient(endpoint, append(options, WithAdminSecret(adminSecret))...)
-}
-
 // NewHasuraClient creates a new GraphQL client for Hasura with the HTTP transport
 // that uses a RoundTripper to set the headers on every request.
 // Headers come in two forms:
@@ -110,6 +105,35 @@ func NewHasuraClient(endpoint string, options ...Option) *HasuraClient {
 		Client:           client.NewClient(endpoint, buildHttpClient(opts.timeout)).WithDebug(opts.debug),
 		adminSecret:      opts.adminSecret,
 		clientName:       opts.clientName,
+		sessionVariables: sessionVariables,
+	}
+}
+
+// NewAdminClient creates a new Hasura GraphQL client with admin role
+func NewAdminClient(endpoint string, adminSecret string, options ...Option) *HasuraClient {
+	return NewHasuraClient(endpoint, append(options, WithAdminSecret(adminSecret))...)
+}
+
+// NewAdminClient creates a new Hasura GraphQL client with admin role
+func NewHasuraClientFromConfig(config HasuraClientConfig) *HasuraClient {
+	endpoint := config.URL
+	if endpoint == "" {
+		endpoint = fmt.Sprintf("%s/v1/graphql", config.BaseURL)
+	}
+
+	sessionVariables := access.SessionVariables{}
+	if config.AdminSecret != "" {
+		sessionVariables.Set(XHasuraAdminSecret, config.AdminSecret)
+	}
+
+	for k, v := range config.Headers {
+		sessionVariables[k] = v
+	}
+
+	return &HasuraClient{
+		Client:           client.NewClient(endpoint, buildHttpClient(config.Timeout)).WithDebug(config.Debug),
+		adminSecret:      config.AdminSecret,
+		clientName:       sessionVariables.Get(HasuraClientName),
 		sessionVariables: sessionVariables,
 	}
 }
