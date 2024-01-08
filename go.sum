@@ -15,6 +15,8 @@ github.com/hgiasac/graphql-utils v0.0.0-20240107180021-6afee0b34872 h1:O7rh01HVM
 github.com/hgiasac/graphql-utils v0.0.0-20240107180021-6afee0b34872/go.mod h1:byWsTx2wEWtOQIuzNCSCB6lmNPvBTGUxHO60bVkBkWg=
 github.com/hgiasac/hasura-router v0.0.0-20230306044702-ec758eb85f6a h1:hkYWlznvFBApu+z6iwTnFWePykbTjd1XUkBF+vKzTfs=
 github.com/hgiasac/hasura-router v0.0.0-20230306044702-ec758eb85f6a/go.mod h1:R/+2LH1x7nHrlsqc7aG6QWeYA2JWtCNdvdx1Kx3HJ5w=
+github.com/hgiasac/hasura-router v0.0.0-20240108030423-a4e84a1c61c3 h1:xbxw79e7OGswcfkhwiZodLa2o+OTmmEsaDI6XTQA2eA=
+github.com/hgiasac/hasura-router v0.0.0-20240108030423-a4e84a1c61c3/go.mod h1:et8VEewnD9sr1Zb57u4M8mbzKjU30ddm0jsYqbow4pk=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
 github.com/mattn/go-colorable v0.1.13/go.mod h1:7S9/ev0klgBDR4GtXTXX8a3vIGJpMovkB8vQcUbaXHg=
 github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=

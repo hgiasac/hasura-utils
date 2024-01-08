@@ -10,13 +10,11 @@ import (
 	"github.com/hasura/go-graphql-client"
 	"github.com/hgiasac/graphql-utils/client"
 	"github.com/hgiasac/hasura-router/go/types"
-	"github.com/hgiasac/hasura-utils/v2/access"
 )
 
-// AdminSecret header constants
 const (
-	XHasuraAdminSecret = "X-Hasura-Admin-Secret"
-	HasuraClientName   = "hasura-client-name"
+	XHasuraUserID    = "x-hasura-user-id"
+	HasuraClientName = "hasura-client-name"
 )
 
 var (
@@ -79,7 +77,7 @@ type HasuraClient struct {
 	client.Client
 	adminSecret      string
 	clientName       string
-	sessionVariables access.SessionVariables
+	sessionVariables types.SessionVariables
 }
 
 // NewHasuraClient creates a new GraphQL client for Hasura with the HTTP transport
@@ -93,9 +91,9 @@ func NewHasuraClient(endpoint string, options ...Option) *HasuraClient {
 		apply(&opts)
 	}
 
-	sessionVariables := access.SessionVariables{}
+	sessionVariables := types.SessionVariables{}
 	if opts.adminSecret != "" {
-		sessionVariables.Set(XHasuraAdminSecret, opts.adminSecret)
+		sessionVariables.Set(types.XHasuraAdminSecret, opts.adminSecret)
 	}
 	if opts.clientName != "" {
 		sessionVariables.Set(HasuraClientName, opts.clientName)
@@ -121,9 +119,9 @@ func NewHasuraClientFromConfig(config HasuraClientConfig) *HasuraClient {
 		endpoint = fmt.Sprintf("%s/v1/graphql", config.BaseURL)
 	}
 
-	sessionVariables := access.SessionVariables{}
+	sessionVariables := types.SessionVariables{}
 	if config.AdminSecret != "" {
-		sessionVariables.Set(XHasuraAdminSecret, config.AdminSecret)
+		sessionVariables.Set(types.XHasuraAdminSecret, config.AdminSecret)
 	}
 
 	for k, v := range config.Headers {
@@ -139,10 +137,10 @@ func NewHasuraClientFromConfig(config HasuraClientConfig) *HasuraClient {
 }
 
 // ToSessionVariables create session variables from options
-func (c HasuraClient) getDefaultSessionVariables() access.SessionVariables {
-	sessionVariables := access.SessionVariables{}
+func (c HasuraClient) getDefaultSessionVariables() types.SessionVariables {
+	sessionVariables := types.SessionVariables{}
 	if c.adminSecret != "" {
-		sessionVariables.Set(XHasuraAdminSecret, c.adminSecret)
+		sessionVariables.Set(types.XHasuraAdminSecret, c.adminSecret)
 	}
 	if c.clientName != "" {
 		sessionVariables.Set(HasuraClientName, c.clientName)
@@ -182,7 +180,7 @@ func (c *HasuraClient) ExecRaw(ctx context.Context, query string, variables map[
 }
 
 // AsRole allows the client to act on behalf of a new role
-func (c *HasuraClient) As(variables access.SessionVariables) (*HasuraClient, error) {
+func (c *HasuraClient) As(variables map[string]string) (*HasuraClient, error) {
 	sessionVariables := c.getDefaultSessionVariables()
 
 	for k, v := range variables {
@@ -198,15 +196,15 @@ func (c *HasuraClient) As(variables access.SessionVariables) (*HasuraClient, err
 }
 
 // AsRole allows the client to act on behalf of a new role
-func (c *HasuraClient) AsUser(role string, userId string) (*HasuraClient, error) {
+func (c *HasuraClient) AsRole(role string, userId string) (*HasuraClient, error) {
 	if c.adminSecret == "" {
 		return nil, fmt.Errorf("cannot promote to role <%s>", role)
 	}
 
-	sessionVariables := c.sessionVariables.FilterKey(types.XHasuraRole, access.XHasuraUserID)
+	sessionVariables := c.sessionVariables.FilterKey(types.XHasuraRole, XHasuraUserID)
 	sessionVariables[types.XHasuraRole] = role
 	if userId != "" {
-		sessionVariables[access.XHasuraUserID] = userId
+		sessionVariables[XHasuraUserID] = userId
 	}
 
 	return &HasuraClient{
@@ -222,7 +220,7 @@ func (c *HasuraClient) AsAdmin() (*HasuraClient, error) {
 	if c.adminSecret == "" {
 		return nil, errPromoteAdminDenied
 	}
-	sessionVariables := c.sessionVariables.FilterKey(types.XHasuraRole, access.XHasuraUserID)
+	sessionVariables := c.sessionVariables.FilterKey(types.XHasuraRole, XHasuraUserID)
 
 	return &HasuraClient{
 		Client:           c.Client,
@@ -244,7 +242,7 @@ func (c *HasuraClient) ForceAdmin() *HasuraClient {
 
 // AsAnonymous allows the client to act on behalf of an anonymous user
 func (c *HasuraClient) AsAnonymous() (*HasuraClient, error) {
-	newSession := access.SessionVariables{}
+	newSession := types.SessionVariables{}
 	if c.clientName != "" {
 		newSession[HasuraClientName] = c.clientName
 	}

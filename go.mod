@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/hasura/go-graphql-client v0.10.2
 	github.com/hgiasac/graphql-utils v0.0.0-20240107180021-6afee0b34872
-	github.com/hgiasac/hasura-router v0.0.0-20230306044702-ec758eb85f6a
+	github.com/hgiasac/hasura-router v0.0.0-20240108030423-a4e84a1c61c3
 )
 
 require (
