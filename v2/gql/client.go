@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	XHasuraUserID    = "x-hasura-user-id"
 	HasuraClientName = "hasura-client-name"
 )
 

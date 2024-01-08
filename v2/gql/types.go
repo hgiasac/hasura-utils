@@ -1,5 +1,9 @@
 package graphql
 
+const (
+	XHasuraUserID = "x-hasura-user-id"
+)
+
 // UpdateManyInput represents the common structure of update_many mutations
 type UpdateManyInput struct {
 	Where map[string]any `json:"where"`
