@@ -1,4 +1,4 @@
-package graphql
+package gql
 
 const (
 	XHasuraUserID = "x-hasura-user-id"
