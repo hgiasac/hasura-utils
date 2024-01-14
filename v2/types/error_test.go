@@ -20,12 +20,13 @@ func TestError_ToRouterError(t *testing.T) {
 		Extensions: map[string]any{
 			"code": "unknown",
 		},
-	}))
+	}, nil))
 
 	assert.Equal(t, types.Error{
 		Message: "test",
 		Extensions: map[string]any{
 			"code": "unknown",
+			"foo":  "bar",
 		},
 	}, ToRouterError(graphql.Errors{
 		{
@@ -34,7 +35,10 @@ func TestError_ToRouterError(t *testing.T) {
 				"code": "unknown",
 			},
 		},
+	}, map[string]any{
+		"foo": "bar",
 	}))
 
-	assert.EqualError(t, ToRouterError(errors.New("test")), "test")
+	assert.EqualError(t, ToRouterError(errors.New("test"), nil), "test")
+	assert.EqualError(t, ToRouterError(errors.New("test"), map[string]any{"foo": "bar"}), "unknown: test; extensions: map[code:unknown foo:bar]")
 }

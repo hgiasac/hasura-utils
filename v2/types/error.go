@@ -92,21 +92,43 @@ func (errs Errors) String() string {
 }
 
 // ToRouterError tries to convert the error interface to hasura router error
-func ToRouterError(err error) error {
+func ToRouterError(err error, extensions map[string]any) error {
 	var gqlError graphql.Error
 	if errors.As(err, &gqlError) {
-		return types.Error{
+		e := types.Error{
 			Message:    gqlError.Message,
 			Extensions: gqlError.Extensions,
 		}
+
+		for k, v := range extensions {
+			e.Extensions[k] = v
+		}
+		return e
 	}
 
 	var gqlErrors graphql.Errors
 	if errors.As(err, &gqlErrors) && len(gqlErrors) > 0 {
-		return types.Error{
+		e := types.Error{
 			Message:    gqlErrors[0].Message,
 			Extensions: gqlErrors[0].Extensions,
 		}
+		for k, v := range extensions {
+			e.Extensions[k] = v
+		}
+
+		return e
+	}
+
+	var actionErr types.Error
+	if errors.As(err, &actionErr) {
+		for k, v := range extensions {
+			actionErr.Extensions[k] = v
+		}
+		return actionErr
+	}
+
+	if len(extensions) > 0 {
+		return ErrUnknown(err, extensions)
 	}
 
 	return err
