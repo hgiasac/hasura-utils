@@ -1,8 +1,4 @@
-package gql
-
-const (
-	XHasuraUserID = "x-hasura-user-id"
-)
+package types
 
 // UpdateManyInput represents the common structure of update_many mutations
 type UpdateManyInput struct {
