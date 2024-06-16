@@ -90,7 +90,7 @@ func (sv *SessionVariables) Del(key string) {
 // Get gets the value associated with the given key.
 // If there are no value associated with the key, Get returns "". It is case insensitive;
 func (sv SessionVariables) Get(key string) string {
-	value, _ := sv[strings.ToLower(key)]
+	value := sv[strings.ToLower(key)]
 	return value
 }
 
