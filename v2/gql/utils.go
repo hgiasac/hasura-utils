@@ -1,10 +1,24 @@
 package gql
 
-import "context"
+import (
+	"context"
+
+	"github.com/hasura/go-graphql-client"
+)
 
 type contextHeaderKey string
 
 const headerKey contextHeaderKey = "x-headers"
+
+const (
+	XHasuraUserID                    = "x-hasura-user-id"
+	XHasuraAdminSecret               = "x-hasura-admin-secret"
+	XHasuraRole                      = "x-hasura-role"
+	XRequestId                       = "x-request-id"
+	XHasuraUseBackendOnlyPermissions = "x-hasura-use-backend-only-permissions"
+
+	RoleAdmin string = "admin"
+)
 
 // getHeadersFromContext get request headers from the context
 func getHeadersFromContext(ctx context.Context) map[string]string {
@@ -30,4 +44,13 @@ func setHeaders(ctx context.Context, hs map[string]string) context.Context {
 		headers[k] = v
 	}
 	return context.WithValue(ctx, headerKey, headers)
+}
+
+func getOperationNameFromOptions(options []graphql.Option) string {
+	for _, opt := range options {
+		if opt.Type() == "operation_name" {
+			return opt.String()
+		}
+	}
+	return ""
 }

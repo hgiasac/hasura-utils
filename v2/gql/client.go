@@ -9,7 +9,11 @@ import (
 
 	"github.com/hasura/go-graphql-client"
 	"github.com/hgiasac/graphql-utils/client"
-	"github.com/hgiasac/hasura-router/go/types"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -17,6 +21,7 @@ const (
 )
 
 var (
+	tracer                = otel.Tracer("github.com/hgiasac/hasura-utils/gql")
 	errPromoteAdminDenied = errors.New("cannot promote to admin")
 )
 
@@ -74,9 +79,10 @@ type HasuraClientConfig struct {
 // HasuraClient represents a graphql client with Hasura credential
 type HasuraClient struct {
 	client.Client
+	endpoint         string
 	adminSecret      string
 	clientName       string
-	sessionVariables types.SessionVariables
+	sessionVariables SessionVariables
 }
 
 // NewHasuraClient creates a new GraphQL client for Hasura with the HTTP transport
@@ -90,9 +96,9 @@ func NewHasuraClient(endpoint string, options ...Option) *HasuraClient {
 		apply(&opts)
 	}
 
-	sessionVariables := types.SessionVariables{}
+	sessionVariables := SessionVariables{}
 	if opts.adminSecret != "" {
-		sessionVariables.Set(types.XHasuraAdminSecret, opts.adminSecret)
+		sessionVariables.Set(XHasuraAdminSecret, opts.adminSecret)
 	}
 	if opts.clientName != "" {
 		sessionVariables.Set(HasuraClientName, opts.clientName)
@@ -103,6 +109,7 @@ func NewHasuraClient(endpoint string, options ...Option) *HasuraClient {
 		adminSecret:      opts.adminSecret,
 		clientName:       opts.clientName,
 		sessionVariables: sessionVariables,
+		endpoint:         endpoint,
 	}
 }
 
@@ -118,9 +125,9 @@ func NewHasuraClientFromConfig(config HasuraClientConfig) *HasuraClient {
 		endpoint = fmt.Sprintf("%s/v1/graphql", config.BaseURL)
 	}
 
-	sessionVariables := types.SessionVariables{}
+	sessionVariables := SessionVariables{}
 	if config.AdminSecret != "" {
-		sessionVariables.Set(types.XHasuraAdminSecret, config.AdminSecret)
+		sessionVariables.Set(XHasuraAdminSecret, config.AdminSecret)
 	}
 
 	for k, v := range config.Headers {
@@ -132,14 +139,15 @@ func NewHasuraClientFromConfig(config HasuraClientConfig) *HasuraClient {
 		adminSecret:      config.AdminSecret,
 		clientName:       sessionVariables.Get(HasuraClientName),
 		sessionVariables: sessionVariables,
+		endpoint:         endpoint,
 	}
 }
 
 // ToSessionVariables create session variables from options
-func (c HasuraClient) getDefaultSessionVariables() types.SessionVariables {
-	sessionVariables := types.SessionVariables{}
+func (c HasuraClient) getDefaultSessionVariables() SessionVariables {
+	sessionVariables := SessionVariables{}
 	if c.adminSecret != "" {
-		sessionVariables.Set(types.XHasuraAdminSecret, c.adminSecret)
+		sessionVariables.Set(XHasuraAdminSecret, c.adminSecret)
 	}
 	if c.clientName != "" {
 		sessionVariables.Set(HasuraClientName, c.clientName)
@@ -149,33 +157,75 @@ func (c HasuraClient) getDefaultSessionVariables() types.SessionVariables {
 }
 
 func (c *HasuraClient) Query(ctx context.Context, q any, variables map[string]any, options ...graphql.Option) error {
+	ctx, span := c.startSpan(ctx, "Query", options)
+	defer span.End()
 	ctx = setHeaders(ctx, c.sessionVariables.ToStringMap())
-	return c.Client.Query(ctx, q, variables, options...)
+	err := c.Client.Query(ctx, q, variables, options...)
+	if err != nil {
+		span.SetStatus(codes.Error, "query failure")
+		span.RecordError(err)
+	}
+	return err
 }
 
 func (c *HasuraClient) QueryRaw(ctx context.Context, q any, variables map[string]any, options ...graphql.Option) ([]byte, error) {
+	ctx, span := c.startSpan(ctx, "QueryRaw", options)
+	defer span.End()
 	ctx = setHeaders(ctx, c.sessionVariables.ToStringMap())
-	return c.Client.QueryRaw(ctx, q, variables, options...)
+	bs, err := c.Client.QueryRaw(ctx, q, variables, options...)
+	if err != nil {
+		span.SetStatus(codes.Error, "query failure")
+		span.RecordError(err)
+	}
+	return bs, err
 }
 
 func (c *HasuraClient) Mutate(ctx context.Context, m any, variables map[string]any, options ...graphql.Option) error {
+	ctx, span := c.startSpan(ctx, "Mutate", options)
+	defer span.End()
 	ctx = setHeaders(ctx, c.sessionVariables.ToStringMap())
-	return c.Client.Mutate(ctx, m, variables, options...)
+	err := c.Client.Mutate(ctx, m, variables, options...)
+	if err != nil {
+		span.SetStatus(codes.Error, "mutation failure")
+		span.RecordError(err)
+	}
+	return err
 }
 
 func (c *HasuraClient) MutateRaw(ctx context.Context, m any, variables map[string]any, options ...graphql.Option) ([]byte, error) {
+	ctx, span := c.startSpan(ctx, "MutateRaw", options)
+	defer span.End()
 	ctx = setHeaders(ctx, c.sessionVariables.ToStringMap())
-	return c.Client.MutateRaw(ctx, m, variables, options...)
+	bs, err := c.Client.MutateRaw(ctx, m, variables, options...)
+	if err != nil {
+		span.SetStatus(codes.Error, "mutation failure")
+		span.RecordError(err)
+	}
+	return bs, err
 }
 
 func (c *HasuraClient) Exec(ctx context.Context, query string, m any, variables map[string]any, options ...graphql.Option) error {
+	ctx, span := c.startSpan(ctx, "Exec", options)
+	defer span.End()
 	ctx = setHeaders(ctx, c.sessionVariables.ToStringMap())
-	return c.Client.Exec(ctx, query, m, variables, options...)
+	err := c.Client.Exec(ctx, query, m, variables, options...)
+	if err != nil {
+		span.SetStatus(codes.Error, "exec failure")
+		span.RecordError(err)
+	}
+	return err
 }
 
 func (c *HasuraClient) ExecRaw(ctx context.Context, query string, variables map[string]any, options ...graphql.Option) ([]byte, error) {
+	ctx, span := c.startSpan(ctx, "ExecRaw", options)
+	defer span.End()
 	ctx = setHeaders(ctx, c.sessionVariables.ToStringMap())
-	return c.Client.ExecRaw(ctx, query, variables, options...)
+	bs, err := c.Client.ExecRaw(ctx, query, variables, options...)
+	if err != nil {
+		span.SetStatus(codes.Error, "exec failure")
+		span.RecordError(err)
+	}
+	return bs, err
 }
 
 // AsRole allows the client to act on behalf of a new role
@@ -200,8 +250,8 @@ func (c *HasuraClient) AsRole(role string, userId string) (*HasuraClient, error)
 		return nil, fmt.Errorf("cannot promote to role <%s>", role)
 	}
 
-	sessionVariables := c.sessionVariables.FilterKey(types.XHasuraRole, XHasuraUserID)
-	sessionVariables[types.XHasuraRole] = role
+	sessionVariables := c.sessionVariables.FilterKey(XHasuraRole, XHasuraUserID)
+	sessionVariables[XHasuraRole] = role
 	if userId != "" {
 		sessionVariables[XHasuraUserID] = userId
 	}
@@ -219,7 +269,7 @@ func (c *HasuraClient) AsAdmin() (*HasuraClient, error) {
 	if c.adminSecret == "" {
 		return nil, errPromoteAdminDenied
 	}
-	sessionVariables := c.sessionVariables.FilterKey(types.XHasuraRole, XHasuraUserID)
+	sessionVariables := c.sessionVariables.FilterKey(XHasuraRole, XHasuraUserID)
 
 	return &HasuraClient{
 		Client:           c.Client,
@@ -241,7 +291,7 @@ func (c *HasuraClient) ForceAdmin() *HasuraClient {
 
 // AsAnonymous allows the client to act on behalf of an anonymous user
 func (c *HasuraClient) AsAnonymous() (*HasuraClient, error) {
-	newSession := types.SessionVariables{}
+	newSession := SessionVariables{}
 	if c.clientName != "" {
 		newSession[HasuraClientName] = c.clientName
 	}
@@ -252,6 +302,16 @@ func (c *HasuraClient) AsAnonymous() (*HasuraClient, error) {
 		clientName:       c.clientName,
 		sessionVariables: newSession,
 	}, nil
+}
+
+func (c *HasuraClient) startSpan(ctx context.Context, name string, options []graphql.Option) (context.Context, trace.Span) {
+	ctx, span := tracer.Start(ctx, name, trace.WithAttributes(attribute.String("url", c.endpoint)))
+	operationName := getOperationNameFromOptions(options)
+	if operationName != "" {
+		span.SetAttributes(attribute.String("operation_name", operationName))
+	}
+
+	return ctx, span
 }
 
 type headerRoundTripper struct {
@@ -265,6 +325,7 @@ func (h headerRoundTripper) RoundTrip(req *http.Request) (*http.Response, error)
 }
 
 func buildHttpClient(timeout time.Duration) *http.Client {
+	propagators := otel.GetTextMapPropagator()
 	return &http.Client{
 		Transport: headerRoundTripper{
 			setHeaders: func(req *http.Request) {
@@ -272,6 +333,8 @@ func buildHttpClient(timeout time.Duration) *http.Client {
 				for hn, hv := range getHeadersFromContext(req.Context()) {
 					req.Header.Set(hn, hv)
 				}
+				// inject trace headers from context
+				propagators.Inject(req.Context(), propagation.HeaderCarrier(req.Header))
 			},
 			rt: http.DefaultTransport,
 		},

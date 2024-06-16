@@ -1,25 +1,21 @@
 module github.com/hgiasac/hasura-utils
 
-go 1.20
+go 1.21
 
 require (
-	github.com/hasura/go-graphql-client v0.10.2
-	github.com/hgiasac/graphql-utils v0.0.0-20240107180021-6afee0b34872
-	github.com/hgiasac/hasura-router v0.0.0-20240108030423-a4e84a1c61c3
+	github.com/hasura/go-graphql-client v0.12.2
+	github.com/hgiasac/graphql-utils v0.1.0
+	github.com/hgiasac/hasura-router v0.0.0-20240503022940-a7d451a5e2ec
+	go.opentelemetry.io/otel v1.27.0
+	go.opentelemetry.io/otel/trace v1.27.0
+	gotest.tools/v3 v3.5.1
 )
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rs/zerolog v1.31.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
-)
-
-require (
-	github.com/google/uuid v1.5.0 // indirect
-	github.com/stretchr/testify v1.8.4
-	nhooyr.io/websocket v1.8.10 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
+	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
+	go.opentelemetry.io/otel/metric v1.27.0 // indirect
+	nhooyr.io/websocket v1.8.11 // indirect
 )
