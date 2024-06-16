@@ -6,11 +6,11 @@ import (
 
 	"github.com/hasura/go-graphql-client"
 	"github.com/hgiasac/hasura-router/go/types"
-	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/assert"
 )
 
 func TestError_ToRouterError(t *testing.T) {
-	assert.Equal(t, types.Error{
+	assert.DeepEqual(t, types.Error{
 		Message: "test",
 		Extensions: map[string]any{
 			"code": "unknown",
@@ -22,7 +22,7 @@ func TestError_ToRouterError(t *testing.T) {
 		},
 	}, nil))
 
-	assert.Equal(t, types.Error{
+	assert.DeepEqual(t, types.Error{
 		Message: "test",
 		Extensions: map[string]any{
 			"code": "unknown",
@@ -39,6 +39,6 @@ func TestError_ToRouterError(t *testing.T) {
 		"foo": "bar",
 	}))
 
-	assert.EqualError(t, ToRouterError(errors.New("test"), nil), "test")
-	assert.EqualError(t, ToRouterError(errors.New("test"), map[string]any{"foo": "bar"}), "unknown: test; extensions: map[code:unknown foo:bar]")
+	assert.ErrorContains(t, ToRouterError(errors.New("test"), nil), "test")
+	assert.ErrorContains(t, ToRouterError(errors.New("test"), map[string]any{"foo": "bar"}), "unknown: test; extensions: map[code:unknown foo:bar]")
 }

@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -324,6 +325,7 @@ func (h headerRoundTripper) RoundTrip(req *http.Request) (*http.Response, error)
 }
 
 func buildHttpClient(timeout time.Duration) *http.Client {
+	propagators := otel.GetTextMapPropagator()
 	return &http.Client{
 		Transport: headerRoundTripper{
 			setHeaders: func(req *http.Request) {
@@ -331,6 +333,8 @@ func buildHttpClient(timeout time.Duration) *http.Client {
 				for hn, hv := range getHeadersFromContext(req.Context()) {
 					req.Header.Set(hn, hv)
 				}
+				// inject trace headers from context
+				propagators.Inject(req.Context(), propagation.HeaderCarrier(req.Header))
 			},
 			rt: http.DefaultTransport,
 		},

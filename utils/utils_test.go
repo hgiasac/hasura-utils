@@ -3,7 +3,7 @@ package utils
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/assert"
 )
 
 func TestPostgresArray(t *testing.T) {
@@ -13,6 +13,6 @@ func TestPostgresArray(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, arr, []string{"a", "b", "c"}, "DecodePostgresArray")
-	assert.Equal(t, EncodePostgresArray(arr), "{a,b,c}", "DecodePostgresArray")
+	assert.DeepEqual(t, arr, []string{"a", "b", "c"})
+	assert.DeepEqual(t, EncodePostgresArray(arr), "{a,b,c}")
 }

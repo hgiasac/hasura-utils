@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/assert"
 )
 
 func TestDate(t *testing.T) {
@@ -38,9 +38,9 @@ func TestDate(t *testing.T) {
 			var result Date
 			err := json.Unmarshal(ip.Input, &result)
 			if ip.IsError {
-				assert.EqualError(t, err, fmt.Sprintf("invalid date `%s`", strings.Trim(string(ip.Input), "\"")))
+				assert.Error(t, err, fmt.Sprintf("invalid date `%s`", strings.Trim(string(ip.Input), "\"")))
 			} else {
-				assert.NoError(t, err)
+				assert.NilError(t, err)
 				assert.Equal(t, *ip.Output, result)
 			}
 		})
@@ -52,7 +52,7 @@ func TestDate(t *testing.T) {
 		}
 
 		err := json.Unmarshal([]byte(`{"date": null}`), &dateObject)
-		assert.NoError(t, err)
-		assert.Nil(t, dateObject.Date)
+		assert.NilError(t, err)
+		assert.Assert(t, dateObject.Date == nil)
 	})
 }
