@@ -2,6 +2,7 @@ package gql
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hasura/go-graphql-client"
 )
@@ -49,7 +50,10 @@ func setHeaders(ctx context.Context, hs map[string]string) context.Context {
 func getOperationNameFromOptions(options []graphql.Option) string {
 	for _, opt := range options {
 		if opt.Type() == "operation_name" {
-			return opt.String()
+			if stringer, ok := opt.(fmt.Stringer); ok {
+				return stringer.String()
+			}
+			break
 		}
 	}
 	return ""
