@@ -21,7 +21,7 @@ const (
 )
 
 var (
-	tracer                = otel.Tracer("github.com/hgiasac/hasura-utils/gql")
+	tracer                = otel.Tracer("github.com/hgiasac/hasura-utils/v2/gql")
 	errPromoteAdminDenied = errors.New("cannot promote to admin")
 )
 
@@ -68,12 +68,12 @@ func WithDebug(value bool) Option {
 
 // HasuraClientConfig input config for Client
 type HasuraClientConfig struct {
-	BaseURL     string            `envconfig:"BASE_URL"`
-	URL         string            `envconfig:"URL"`
-	AdminSecret string            `envconfig:"ADMIN_SECRET"`
-	Headers     map[string]string `envconfig:"HEADERS"`
-	Timeout     time.Duration     `envconfig:"TIMEOUT" default:"60s"`
-	Debug       bool              `envconfig:"DEBUG" default:"false"`
+	BaseURL     string            `envconfig:"BASE_URL" env:"BASE_URL" default:""`
+	URL         string            `envconfig:"URL" env:"URL" default:""`
+	AdminSecret string            `envconfig:"ADMIN_SECRET" env:"ADMIN_SECRET" default:""`
+	Headers     map[string]string `envconfig:"HEADERS" env:"HEADERS" optional:""`
+	Timeout     time.Duration     `envconfig:"TIMEOUT" env:"TIMEOUT" default:"60s"`
+	Debug       bool              `envconfig:"DEBUG" env:"DEBUG" default:"false"`
 }
 
 // HasuraClient represents a graphql client with Hasura credential
